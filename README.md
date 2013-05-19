@@ -11,7 +11,7 @@ Features:
 - Based on Kohana Image Library.
 
 ##Installing and configuring
-Extract the 'EasyImage' folder under `protected/extensions`
+Extract the `EasyImage` folder under `protected/extensions`
 
 Add the following to your config file `components` section:
 
@@ -38,20 +38,20 @@ and the following to `import` section:
 ##Usage
 ###InstanceOf
 ```php
-$image = new EasyImage('/webroot/path/to/image.jpg');
+$image = new EasyImage('/path/to/image.jpg');
 $image->resize(100, 100);
 $image->save('/full/path/to/thumb.jpg');
 ```
 ####Parameters
-- string $file required - Image file path
-- string $driver - Driver: `GD`, `Imagick`
+- string `$file` required - Image file path
+- string `$driver` - Driver: `GD`, `Imagick`
 
 ### ThumbOf
 You can create a thumbnail directly in the `View`:
 
 ```php
 // Create and autocache
-Yii::app()->easyImage->thumbOf('/webroot/path/to/image.jpg', array('rotate' => 90));
+Yii::app()->easyImage->thumbOf('/path/to/image.jpg', array('rotate' => 90));
 
 // or 
 Yii::app()->easyImage->thumbOf('image.jpg', array('rotate' => 90),  array('class' => 'image'));
