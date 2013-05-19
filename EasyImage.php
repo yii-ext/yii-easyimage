@@ -4,13 +4,14 @@
  * @author Artur Zhdanov <zhdanovartur@gmail.com>
  * @copyright Copyright &copy; Artur Zhdanov 2013-
  * @license http://www.opensource.org/licenses/bsd-license.php New BSD License
- * @version 1.0.0
+ * @version 0.9.1
  */
 
 // Preload kohana image library
-Yii::import('ext.easyimage.drivers.Image');
-Yii::import('ext.easyimage.drivers.GD', true);
-Yii::import('ext.easyimage.drivers.Imagick', true);
+Yii::setPathOfAlias('easyimage', dirname(__FILE__));
+Yii::import('easyimage.drivers.Image');
+Yii::import('easyimage.drivers.GD', true);
+Yii::import('easyimage.drivers.Imagick', true);
 
 class EasyImage extends CApplicationComponent
 {
