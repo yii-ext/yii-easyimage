@@ -33,7 +33,7 @@ class EasyImage extends CApplicationComponent
 	public function __construct($file = null, $driver = null)
 	{
 		if ($file) {
-			return $this->_image = Image::factory(dirname(Yii::app()->basePath) . $file, $driver ? $driver : $this->driver);
+			return $this->_image = Image::factory($this->detectPath($file), $driver ? $driver : $this->driver);
 		}
 	}
 
@@ -46,6 +46,15 @@ class EasyImage extends CApplicationComponent
 			// Showing any kind of error will be "inside" image data
 			return '';
 		}
+	}
+
+	public function detectPath($file)
+	{
+		$fullPath = dirname(Yii::app()->basePath) . $file;
+		if (is_file($fullPath)) {
+			return $fullPath;
+		}
+		return $file;
 	}
 
 	public function image()
@@ -61,7 +70,6 @@ class EasyImage extends CApplicationComponent
 	{
 		return CHtml::image($this->thumbSrcOf($file, $params), null, $htmlOptions);
 	}
-
 
 	public function thumbSrcOf($file, $params = array())
 	{
@@ -90,7 +98,7 @@ class EasyImage extends CApplicationComponent
 		}
 
 		// Create and caching thumb by params
-		$this->_image = Image::factory(dirname(Yii::app()->basePath) . $file, $this->driver);
+		$this->_image = Image::factory($this->detectPath($file), $this->driver);
 		foreach ($params as $key => $value) {
 			switch ($key) {
 				case 'resize':
