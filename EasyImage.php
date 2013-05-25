@@ -4,7 +4,7 @@
  * @author Artur Zhdanov <zhdanovartur@gmail.com>
  * @copyright Copyright &copy; Artur Zhdanov 2013-
  * @license http://www.opensource.org/licenses/bsd-license.php New BSD License
- * @version 0.9.1
+ * @version 1.0.0
  */
 
 // Preload kohana image library
@@ -27,8 +27,9 @@ class EasyImage extends CApplicationComponent
 	private $_image;
 	public $driver = 'GD'; // GD, Imagick
 	public $quality = 100;
-	public $cachePath = '/assets/'; //relative web root (default: /assets/)
+	public $cachePath = '/assets/easyimage/'; //relative web root (recommended: /assets/easyimage/)
 	public $cacheTime = 2592000; // 30 days
+	public $retinaSupport = false;
 
 	public function __construct($file = null, $driver = null)
 	{
@@ -48,13 +49,17 @@ class EasyImage extends CApplicationComponent
 		}
 	}
 
-	public function detectPath($file)
+	public function init()
 	{
-		$fullPath = dirname(Yii::app()->basePath) . $file;
-		if (is_file($fullPath)) {
-			return $fullPath;
+		// Publish "retina.js" library (http://retinajs.com/)
+		if ($this->retinaSupport) {
+			Yii::app()->clientScript->registerScriptFile(
+				Yii::app()->assetManager->publish(
+					Yii::getPathOfAlias('easyimage.assets') . '/retina.js'
+				),
+				CClientScript::POS_HEAD
+			);
 		}
-		return $file;
 	}
 
 	public function image()
@@ -66,39 +71,22 @@ class EasyImage extends CApplicationComponent
 		}
 	}
 
-	public function thumbOf($file, $params = array(), $htmlOptions = array())
+	public function detectPath($file)
 	{
-		return CHtml::image($this->thumbSrcOf($file, $params), null, $htmlOptions);
+		$fullPath = dirname(Yii::app()->basePath) . $file;
+		if (is_file($fullPath)) {
+			return $fullPath;
+		}
+		return $file;
 	}
 
-	public function thumbSrcOf($file, $params = array())
+	private function _doThumbOf($file, $newFile, $params)
 	{
-		// Paths
-		$cachePath = dirname(Yii::app()->basePath) . $this->cachePath;
-		$hash = md5($file . serialize($params));
-		$subPath = 'easyimage' . DIRECTORY_SEPARATOR . $hash{0};
-		$cacheFileName = $hash . '.' . (isset($params['type']) ? $params['type'] : pathinfo($file, PATHINFO_EXTENSION));
-		$cacheFile = $cachePath . $subPath . DIRECTORY_SEPARATOR . $cacheFileName;
-		$webCacheFile = $this->cachePath . $subPath . '/' . $cacheFileName;
-
-		// Return cache image URL
-		if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $this->cacheTime)) {
-			return $webCacheFile;
+		if ($file instanceof Image) {
+			$this->_image = $file;
+		} else {
+			$this->_image = Image::factory($this->detectPath($file), $this->driver);
 		}
-
-		// Check permissions
-		if (!is_dir($cachePath)) {
-			throw new CException('Thumb cache directory not found.');
-		}
-		if (!is_writeable($cachePath)) {
-			throw new CException('Thumb cache directory not writeable');
-		}
-		if (!is_dir($cachePath . $subPath)) {
-			mkdir($cachePath . $subPath, 0755, true);
-		}
-
-		// Create and caching thumb by params
-		$this->_image = Image::factory($this->detectPath($file), $this->driver);
 		foreach ($params as $key => $value) {
 			switch ($key) {
 				case 'resize':
@@ -183,8 +171,54 @@ class EasyImage extends CApplicationComponent
 					throw new CException('Action "' . $key . '" is not found');
 			}
 		}
-		$this->save($cacheFile, $this->quality);
+		return $this->save($newFile, $this->quality);
+	}
+
+	public function thumbSrcOf($file, $params = array())
+	{
+		// Paths
+		$hash = md5($file . serialize($params));
+		$cachePath = dirname(Yii::app()->basePath) . $this->cachePath . $hash{0};
+		$cacheFileExt = isset($params['type']) ? $params['type'] : pathinfo($file, PATHINFO_EXTENSION);
+		$cacheFileName = $hash . '.' . $cacheFileExt;
+		$cacheFile = $cachePath . DIRECTORY_SEPARATOR . $cacheFileName;
+		$webCacheFile = $this->cachePath . $hash{0} . '/' . $cacheFileName;
+
+		// Return cache image URL
+		if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $this->cacheTime)) {
+			return $webCacheFile;
+		}
+
+		// Make cache dir
+		if (!is_dir($cachePath)) {
+			mkdir($cachePath, 0755, true);
+		}
+
+		// Create and caching thumb by params
+		$image = Image::factory($this->detectPath($file), $this->driver);
+		$originWidth = $image->width;
+		$originHeight = $image->height;
+		$result = $this->_doThumbOf($image, $cacheFile, $params);
+		unset($image);
+
+		// Same for high-resolution image
+		if ($this->retinaSupport && $result) {
+			if ($this->image()->width * 2 <= $originWidth && $this->image()->height * 2 <= $originHeight) {
+				$retinaFile = $cachePath . DIRECTORY_SEPARATOR . $hash . '@2x.' . $cacheFileExt;
+				if (isset($params['resize']['width']) && isset($params['resize']['height'])) {
+					$params['resize']['width'] = $this->image()->width * 2;
+					$params['resize']['height'] = $this->image()->height * 2;
+				}
+				$this->_doThumbOf($file, $retinaFile, $params);
+			}
+		}
+
 		return $webCacheFile;
+	}
+
+	public function thumbOf($file, $params = array(), $htmlOptions = array())
+	{
+		return CHtml::image($this->thumbSrcOf($file, $params), null, $htmlOptions);
 	}
 
 	//IDE AutoComplete methods (because factory pattern)
