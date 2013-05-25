@@ -24,6 +24,10 @@ class EasyImage extends CApplicationComponent
 	const RESIZE_INVERSE = 0x05;
 	const RESIZE_PRECISE = 0x06;
 
+	// Flipping directions
+	const FLIP_HORIZONTAL = 0x11;
+	const FLIP_VERTICAL = 0x12;
+
 	private $_image;
 	public $driver = 'GD'; // GD, Imagick
 	public $quality = 100;
@@ -115,6 +119,16 @@ class EasyImage extends CApplicationComponent
 						$this->rotate($value['degrees']);
 					} else {
 						$this->rotate($value);
+					}
+					break;
+				case 'flip':
+					if (is_array($value)) {
+						if (!isset($value['direction'])) {
+							throw new CException('Param "direction" is required for action "' . $key . '"');
+						}
+						$this->flip($value['direction']);
+					} else {
+						$this->flip($value);
 					}
 					break;
 				case 'sharpen':
@@ -236,6 +250,11 @@ class EasyImage extends CApplicationComponent
 	public function rotate($degrees)
 	{
 		return $this->image()->rotate($degrees);
+	}
+
+	public function flip($direction)
+	{
+		return $this->image()->flip($direction);
 	}
 
 	public function sharpen($amount)
