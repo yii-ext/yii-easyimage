@@ -8,6 +8,7 @@ Features:
 - Support `GD` and `Imagick`
 - Automaticly thumbnails caching
 - Cache sorting to subdirectories
+- Support Retina displays
 - Based on Kohana Image Library.
 
 ##Installing and configuring
@@ -23,7 +24,8 @@ Add the following to your config file `components` section:
     //'driver' => 'GD',
     //'quality' => 100,
     //'cachePath' => '/assets/',
-    //'cacheTime' => 2592000
+    //'cacheTime' => 2592000,
+    //'retinaSupport' => true,
   ),
 ```
 and the following to `import` section:
@@ -120,6 +122,18 @@ Yii::app()->easyImage->thumbOf('image.jpg', array('rotate' => 45));
 ```
 ####Parameters
 - integer `$degrees` required - Degrees to rotate: -360-360
+
+###Flip
+```php
+$image->flip(EasyImage::FLIP_HORIZONTAL);
+```
+```php
+Yii::app()->easyImage->thumbOf('image.jpg', array('flip' => array('direction' => EasyImage::FLIP_HORIZONTAL)));
+// or
+Yii::app()->easyImage->thumbOf('image.jpg', array('flip' => EasyImage::FLIP_VERTICAL));
+```
+####Parameters
+- integer `$direction` required - Direction: `EasyImage::RESIZE_NONE`, `EasyImage::RESIZE_WIDTH`.
 
 ###Sharpen
 ```php
