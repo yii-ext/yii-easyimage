@@ -125,6 +125,7 @@ class Image_GD extends Image
      * Loads an image into GD.
      *
      * @return  void
+     * @throws CException
      */
     protected function _load_image()
     {
@@ -133,7 +134,10 @@ class Image_GD extends Image
             $create = $this->_create_function;
 
             // Open the temporary image
-            $this->_image = $create($this->file);
+            $this->_image = @$create($this->file);
+            if(!$this->_image) {
+                throw new CException('Incorrect image provided');
+            }
 
             // Preserve transparency when saving
             imagesavealpha($this->_image, true);
