@@ -11,11 +11,10 @@
             "email": "zhdanovartur@gmail.com"
         },
         {
-    	    "name" "Dmitry Semenov",
+    	    "name": "Dmitry Semenov",
     	    "email": "disemx@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
     "require": {
         "php": ">=5.1.0"
     }
