@@ -1,14 +1,18 @@
 {
-    "name": "zhdanovartur/yii-easyimage",
+    "name": "yii-ext/yii-easyimage",
     "description": "Yii Framework extension for easy creating and caching thumbnails on real time.",
     "keywords": ["yii", "extension", "image", "thumbnail", "cache", "realtime"],
-    "homepage": "https://github.com/zhdanovartur/yii-easyimage",
+    "homepage": "https://github.com/yii-ext/yii-easyimage",
     "type": "yii-extension",
     "license": "New BSD",
     "authors": [
         {
             "name": "Artur Zhdanov",
             "email": "zhdanovartur@gmail.com"
+        },
+        {
+    	    "name" "Dmitry Semenov",
+    	    "email": "disemx@gmail.com"
         }
     ],
     "minimum-stability": "dev",

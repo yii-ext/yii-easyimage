@@ -1,15 +1,18 @@
 <?php
 /**
  * EasyImage class file.
- * @author Artur Zhdanov <zhdanovartur@gmail.com>
+ * @author    Artur Zhdanov <zhdanovartur@gmail.com>
  * @copyright Copyright &copy; Artur Zhdanov 2013-
- * @license http://www.opensource.org/licenses/bsd-license.php New BSD License
- * @version 1.0.2
+ * @license   http://www.opensource.org/licenses/bsd-license.php New BSD License
+ * @version   1.0.2
  */
 
 Yii::setPathOfAlias('easyimage', dirname(__FILE__));
 Yii::import('easyimage.drivers.*');
 
+/**
+ * Class EasyImage
+ */
 class EasyImage extends CApplicationComponent
 {
 
@@ -17,16 +20,34 @@ class EasyImage extends CApplicationComponent
      * Resizing directions
      */
     const RESIZE_NONE = 0x01;
+    /**
+     * @var
+     */
     const RESIZE_WIDTH = 0x02;
+    /**
+     * @var
+     */
     const RESIZE_HEIGHT = 0x03;
+    /**
+     * @var
+     */
     const RESIZE_AUTO = 0x04;
+    /**
+     * @var
+     */
     const RESIZE_INVERSE = 0x05;
+    /**
+     * @var
+     */
     const RESIZE_PRECISE = 0x06;
 
     /**
      * Flipping directions
      */
     const FLIP_HORIZONTAL = 0x11;
+    /**
+     * @var
+     */
     const FLIP_VERTICAL = 0x12;
 
     /**
@@ -62,14 +83,16 @@ class EasyImage extends CApplicationComponent
 
     /**
      * Constructor.
+     *
      * @param string $file
      * @param string $driver
      */
     public function __construct($file = null, $driver = null)
     {
-        if ($file) {
+        if (is_file($file)) {
             return $this->_image = Image::factory($this->detectPath($file), $driver ? $driver : $this->driver);
         }
+        return "";
     }
 
     /**
@@ -86,6 +109,9 @@ class EasyImage extends CApplicationComponent
         }
     }
 
+    /**
+     *
+     */
     public function init()
     {
         // Publish "retina.js" library (http://retinajs.com/)
@@ -115,7 +141,9 @@ class EasyImage extends CApplicationComponent
 
     /**
      * This method detects which (absolute or relative) path is used.
+     *
      * @param array $file path
+     *
      * @return string path
      */
     public function detectPath($file)
@@ -129,9 +157,11 @@ class EasyImage extends CApplicationComponent
 
     /**
      * Performance of image manipulation and save result.
-     * @param string $file the path to the original image
+     *
+     * @param string $file    the path to the original image
      * @param string $newFile path to the resulting image
-     * @param array $params
+     * @param array  $params
+     *
      * @return bool operation status
      * @throws CException
      */
@@ -140,15 +170,18 @@ class EasyImage extends CApplicationComponent
         if ($file instanceof Image) {
             $this->_image = $file;
         } else {
+            if (!is_file($file)) {
+                return false;
+            }
             $this->_image = Image::factory($this->detectPath($file), $this->driver);
         }
         foreach ($params as $key => $value) {
             switch ($key) {
                 case 'resize':
                     $this->resize(
-                        isset($value['width']) ? $value['width'] : NULL,
-                        isset($value['height']) ? $value['height'] : NULL,
-                        isset($value['master']) ? $value['master'] : NULL
+                        isset($value['width']) ? $value['width'] : null,
+                        isset($value['height']) ? $value['height'] : null,
+                        isset($value['master']) ? $value['master'] : null
                     );
                     break;
                 case 'crop':
@@ -158,8 +191,8 @@ class EasyImage extends CApplicationComponent
                     $this->crop(
                         $value['width'],
                         $value['height'],
-                        isset($value['offset_x']) ? $value['offset_x'] : NULL,
-                        isset($value['offset_y']) ? $value['offset_y'] : NULL
+                        isset($value['offset_x']) ? $value['offset_x'] : null,
+                        isset($value['offset_y']) ? $value['offset_y'] : null
                     );
                     break;
                 case 'rotate':
@@ -194,17 +227,17 @@ class EasyImage extends CApplicationComponent
                     break;
                 case 'reflection':
                     $this->reflection(
-                        isset($value['height']) ? $value['height'] : NULL,
+                        isset($value['height']) ? $value['height'] : null,
                         isset($value['opacity']) ? $value['opacity'] : 100,
-                        isset($value['fade_in']) ? $value['fade_in'] : FALSE
+                        isset($value['fade_in']) ? $value['fade_in'] : false
                     );
                     break;
                 case 'watermark':
                     if (is_array($value)) {
                         $this->watermark(
-                            isset($value['watermark']) ? $value['watermark'] : NULL,
-                            isset($value['offset_x']) ? $value['offset_x'] : NULL,
-                            isset($value['offset_y']) ? $value['offset_y'] : NULL,
+                            isset($value['watermark']) ? $value['watermark'] : null,
+                            isset($value['offset_x']) ? $value['offset_x'] : null,
+                            isset($value['offset_y']) ? $value['offset_y'] : null,
                             isset($value['opacity']) ? $value['opacity'] : 100
                         );
                     } else {
@@ -241,58 +274,70 @@ class EasyImage extends CApplicationComponent
 
     /**
      * This method returns the URL to the cached thumbnail.
+     *
      * @param string $file path
-     * @param array $params
+     * @param array  $params
+     *
      * @return string URL path
      */
     public function thumbSrcOf($file, $params = array())
     {
-        // Paths
-        $hash = md5($file . serialize($params));
-        $cachePath = Yii::getpathOfAlias('webroot') . $this->cachePath . $hash{0};
-        $cacheFileExt = isset($params['type']) ? $params['type'] : pathinfo($file, PATHINFO_EXTENSION);
-        $cacheFileName = $hash . '.' . $cacheFileExt;
-        $cacheFile = $cachePath . DIRECTORY_SEPARATOR . $cacheFileName;
-        $webCacheFile = Yii::app()->baseUrl . $this->cachePath . $hash{0} . '/' . $cacheFileName;
+        try {
+            // Paths
+            $hash = md5($file . serialize($params));
+            $cachePath = Yii::getpathOfAlias('webroot') . $this->cachePath . $hash{0};
+            $cacheFileExt = isset($params['type']) ? $params['type'] : pathinfo($file, PATHINFO_EXTENSION);
+            $cacheFileName = $hash . '.' . $cacheFileExt;
+            $cacheFile = $cachePath . DIRECTORY_SEPARATOR . $cacheFileName;
+            $webCacheFile = Yii::app()->baseUrl . $this->cachePath . $hash{0} . '/' . $cacheFileName;
 
-        // Return URL to the cache image
-        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $this->cacheTime)) {
-            return $webCacheFile;
-        }
-
-        // Make cache dir
-        if (!is_dir($cachePath)) {
-            mkdir($cachePath, 0755, true);
-        }
-
-        // Create and caching thumbnail use params
-        $image = Image::factory($this->detectPath($file), $this->driver);
-        $originWidth = $image->width;
-        $originHeight = $image->height;
-        $result = $this->_doThumbOf($image, $cacheFile, $params);
-        unset($image);
-
-        // Same for high-resolution image
-        if ($this->retinaSupport && $result) {
-            if ($this->image()->width * 2 <= $originWidth && $this->image()->height * 2 <= $originHeight) {
-                $retinaFile = $cachePath . DIRECTORY_SEPARATOR . $hash . '@2x.' . $cacheFileExt;
-                if (isset($params['resize']['width']) && isset($params['resize']['height'])) {
-                    $params['resize']['width'] = $this->image()->width * 2;
-                    $params['resize']['height'] = $this->image()->height * 2;
-                }
-                $this->_doThumbOf($file, $retinaFile, $params);
+            // Return URL to the cache image
+            if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $this->cacheTime)) {
+                return $webCacheFile;
             }
-        }
 
-        return $webCacheFile;
+            // Make cache dir
+            if (!is_dir($cachePath)) {
+                mkdir($cachePath, 0755, true);
+            }
+
+            // Create and caching thumbnail use params
+            if (!is_file($this->detectPath($file))) {
+                return false;
+            }
+            $image = Image::factory($this->detectPath($file), $this->driver);
+            $originWidth = $image->width;
+            $originHeight = $image->height;
+            $result = $this->_doThumbOf($image, $cacheFile, $params);
+            unset($image);
+
+            // Same for high-resolution image
+            if ($this->retinaSupport && $result) {
+                if ($this->image()->width * 2 <= $originWidth && $this->image()->height * 2 <= $originHeight) {
+                    $retinaFile = $cachePath . DIRECTORY_SEPARATOR . $hash . '@2x.' . $cacheFileExt;
+                    if (isset($params['resize']['width']) && isset($params['resize']['height'])) {
+                        $params['resize']['width'] = $this->image()->width * 2;
+                        $params['resize']['height'] = $this->image()->height * 2;
+                    }
+                    $this->_doThumbOf($file, $retinaFile, $params);
+                }
+            }
+
+            return $webCacheFile;
+        } catch (Exception $e) {
+            Yii::log($e->getMessage());
+            return '';
+        }
     }
 
     /**
      * This method returns prepared HTML code for cached thumbnail.
      * Use standard yii-component CHtml::image().
+     *
      * @param string $file path
-     * @param array $params
-     * @param array $htmlOptions
+     * @param array  $params
+     * @param array  $htmlOptions
+     *
      * @return string HTML
      */
     public function thumbOf($file, $params = array(), $htmlOptions = array())
@@ -302,6 +347,7 @@ class EasyImage extends CApplicationComponent
             isset($htmlOptions['alt']) ? $htmlOptions['alt'] : '',
             $htmlOptions
         );
+
     }
 
     /**
@@ -309,37 +355,75 @@ class EasyImage extends CApplicationComponent
      * because it uses a design pattern "factory".
      */
 
-    public function resize($width = NULL, $height = NULL, $master = NULL)
+    public function resize($width = null, $height = null, $master = null)
     {
         return $this->image()->resize($width, $height, $master);
     }
 
-    public function crop($width, $height, $offset_x = NULL, $offset_y = NULL)
+    /**
+     * @param      $width
+     * @param      $height
+     * @param null $offset_x
+     * @param null $offset_y
+     *
+     * @return $this
+     */
+    public function crop($width, $height, $offset_x = null, $offset_y = null)
     {
         return $this->image()->crop($width, $height, $offset_x, $offset_y);
     }
 
+    /**
+     * @param $degrees
+     *
+     * @return $this
+     */
     public function rotate($degrees)
     {
         return $this->image()->rotate($degrees);
     }
 
+    /**
+     * @param $direction
+     *
+     * @return $this
+     */
     public function flip($direction)
     {
         return $this->image()->flip($direction);
     }
 
+    /**
+     * @param $amount
+     *
+     * @return $this
+     */
     public function sharpen($amount)
     {
         return $this->image()->sharpen($amount);
     }
 
-    public function reflection($height = NULL, $opacity = 100, $fade_in = FALSE)
+    /**
+     * @param null $height
+     * @param int  $opacity
+     * @param bool $fade_in
+     *
+     * @return $this
+     */
+    public function reflection($height = null, $opacity = 100, $fade_in = false)
     {
         return $this->image()->reflection($height, $opacity, $fade_in);
     }
 
-    public function watermark($watermark, $offset_x = NULL, $offset_y = NULL, $opacity = 100)
+    /**
+     * @param      $watermark
+     * @param null $offset_x
+     * @param null $offset_y
+     * @param int  $opacity
+     *
+     * @return $this
+     */
+    public function watermark($watermark, $offset_x = null, $offset_y = null, $opacity = 100)
     {
         if ($watermark instanceof EasyImage) {
             $watermark = $watermark->image();
@@ -349,17 +433,35 @@ class EasyImage extends CApplicationComponent
         return $this->image()->watermark($watermark, $offset_x, $offset_y, $opacity);
     }
 
+    /**
+     * @param     $color
+     * @param int $opacity
+     *
+     * @return $this
+     */
     public function background($color, $opacity = 100)
     {
         return $this->image()->background($color, $opacity);
     }
 
-    public function save($file = NULL, $quality = 100)
+    /**
+     * @param null $file
+     * @param int  $quality
+     *
+     * @return bool
+     */
+    public function save($file = null, $quality = 100)
     {
         return $this->image()->save($file, $quality);
     }
 
-    public function render($type = NULL, $quality = 100)
+    /**
+     * @param null $type
+     * @param int  $quality
+     *
+     * @return string
+     */
+    public function render($type = null, $quality = 100)
     {
         return $this->image()->render($type, $quality);
     }
