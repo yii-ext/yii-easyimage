@@ -18,7 +18,7 @@ class EasyImage extends CApplicationComponent
     /**
      * @var string
      */
-    public $password';
+    public $password;
     /**
      * Resizing directions
      */
