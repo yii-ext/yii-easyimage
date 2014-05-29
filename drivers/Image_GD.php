@@ -135,7 +135,7 @@ class Image_GD extends Image
 
             // Open the temporary image
             $this->_image = @$create($this->file);
-            if(!$this->_image) {
+            if (!$this->_image) {
                 throw new CException('Incorrect image provided');
             }
 

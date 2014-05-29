@@ -15,7 +15,10 @@ Yii::import('easyimage.drivers.*');
  */
 class EasyImage extends CApplicationComponent
 {
-
+    /**
+     * @var string
+     */
+    public $password';
     /**
      * Resizing directions
      */
@@ -272,6 +275,45 @@ class EasyImage extends CApplicationComponent
         return $this->save($newFile, $this->quality);
     }
 
+
+    /**
+     * @param       $file
+     * @param array $params
+     *
+     * @return string
+     */
+    public function getUrl($file, $params = array())
+    {
+        try {
+            $hash = md5($file . serialize($params));
+            $cachePath = Yii::getpathOfAlias('webroot') . $this->cachePath . $hash{0};
+            $cacheFileExt = isset($params['type']) ? $params['type'] : pathinfo($file, PATHINFO_EXTENSION);
+            $cacheFileName = $hash . '.' . $cacheFileExt;
+            $cacheFile = $cachePath . DIRECTORY_SEPARATOR . $cacheFileName;
+            $webCacheFile = Yii::app()->baseUrl . $this->cachePath . $hash{0} . '/' . $cacheFileName;
+
+            // Return URL to the cache image
+            if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $this->cacheTime)) {
+                return $webCacheFile;
+            } else {
+                $link = mcrypt_encrypt(MCRYPT_3DES, $this->password, serialize(array('f' => $file, 'p' => $params)), MCRYPT_MODE_ECB);
+                return Yii::app()->createAbsoluteUrl('user/image', array('params' => $link));
+            }
+        } catch (Exception $e) {
+            return '';
+        }
+    }
+
+    public function test($file)
+    {
+        return $this->thumbSrcOf($file, array(
+            'resize' => array(
+                'width' => 18,
+                'height' => 35
+            )
+        ));
+    }
+
     /**
      * This method returns the URL to the cached thumbnail.
      *
@@ -285,6 +327,7 @@ class EasyImage extends CApplicationComponent
         try {
             // Paths
             $hash = md5($file . serialize($params));
+
             $cachePath = Yii::getpathOfAlias('webroot') . $this->cachePath . $hash{0};
             $cacheFileExt = isset($params['type']) ? $params['type'] : pathinfo($file, PATHINFO_EXTENSION);
             $cacheFileName = $hash . '.' . $cacheFileExt;
@@ -298,9 +341,8 @@ class EasyImage extends CApplicationComponent
 
             // Make cache dir
             if (!is_dir($cachePath)) {
-                mkdir($cachePath, 0755, true);
+                @mkdir($cachePath, 0755, true);
             }
-
             // Create and caching thumbnail use params
             if (!is_file($this->detectPath($file))) {
                 return false;
@@ -322,7 +364,6 @@ class EasyImage extends CApplicationComponent
                     $this->_doThumbOf($file, $retinaFile, $params);
                 }
             }
-
             return $webCacheFile;
         } catch (Exception $e) {
             Yii::log($e->getMessage());
@@ -343,7 +384,7 @@ class EasyImage extends CApplicationComponent
     public function thumbOf($file, $params = array(), $htmlOptions = array())
     {
         return CHtml::image(
-            $this->thumbSrcOf($file, $params),
+            $this->getUrl($file, $params),
             isset($htmlOptions['alt']) ? $htmlOptions['alt'] : '',
             $htmlOptions
         );
