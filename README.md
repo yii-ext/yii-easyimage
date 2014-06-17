@@ -21,6 +21,7 @@ Add the following to your config file `components` section:
 //...
   'easyImage' => array(
     'class' => 'application.extensions.easyimage.EasyImage',
+    'password' => 'password' // used for image action
     //'driver' => 'GD',
     //'quality' => 100,
     //'cachePath' => '/assets/easyimage/',
